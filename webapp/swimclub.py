@@ -1,8 +1,11 @@
 import statistics
 import hfpy_utils
 
+import json
+
 FOLDER = "swimdata/"
 CHARTS = "charts/"
+JSONDATA = "records.json"
 
 def read_swim_data(filename):
     
@@ -40,6 +43,25 @@ def read_swim_data(filename):
     return swimmer, age, distance, stroke, times, average, converts
 
 
+def event_lookup(event):
+    """Dateiname in dict-keys konvertieren
+
+    Dateinamen eines bestimmten Formats und einder vorgegbenen Struktur, werden mit Hilfe
+    eines dict in einen String umgewandelt, der im records-dict vorkommt
+
+    Args:
+        event (String): Dateiname, der den Anforderungen an die Konvertierung genügt
+    """
+    conversions = {
+        "Free":"freestyle",
+        "Back":"backstroke",
+        "Breast":"breaststroke",
+        "Fly":"butterfly",
+        "IM":"individual medley"
+    }
+    *_, range, stroke = event.removesuffix(".txt").split("-")
+    return f"{range} {conversions[stroke]}"
+
 
 def produce_bar_chart(filename, location=CHARTS):
     (swimmer, age, distance, stroke, times, avarage, converts) = read_swim_data(filename)
@@ -70,17 +92,27 @@ def produce_bar_chart(filename, location=CHARTS):
                 <rect height="30" width="{bar_width}" style="fill:rgb(0,0,255);"  > 
             </svg>{t} <br />
             """
-    # eof    
+    # html-footer
+    # 
+    with open(JSONDATA) as jf:
+        records = json.load(jf)  
+    COURSES = ("LC Men", "LC Women", "SC Men", "SC Women")
+    times = []
+    for course in COURSES:
+        times.append(records[course][event_lookup(filename)])
+
     footer = f"""
                     <p> Average time: {avarage}</p>
+                    <p> M(50m): {times[0]}  -  M(25m): {times[2]}<br />W(50m): {times[1]}  -  W(25m): {times[3]} </p>
             </body>
     </html>
     """
     page = f"{html}{svgs}{footer}"
-    save_to =f"{location}{filename.removesuffix(".txt")}.html"
+    save_to =f"{location}{filename.removesuffix('.txt')}.html"
 
     # generierte seite in html-datei schreiben
     with open(save_to, "w") as tf: # mit parameter w wird neu geschrieben mit a angehängt
         print(page, file=tf)
     
     return save_to
+
