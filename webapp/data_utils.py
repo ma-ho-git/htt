@@ -1,6 +1,25 @@
 import DBcm
 
-db_details = "CoachDB.sqlite3"
+## db_details = "CoachDB.sqlite3" #sqlite3
+
+import platform
+
+if "aws" in platform.uname().release:
+    # Running on PythonAnywere (if aws based)
+    db_details = {
+        "host":"pymaho.mysql.eu.pythonanywhere-services.com",
+        "database":"pymaho$default",
+        "user":"pymaho",
+        "password":"swimpasswd",
+    }
+else:
+    db_details = {          
+        # lokale MariaDB, MySQL
+        "host":"localhost",
+        "database":"swimDB",
+        "user":"swimuser",
+        "password":"swimpasswd"
+    }
 
 from queries import *
 
